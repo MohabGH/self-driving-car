@@ -38,6 +38,6 @@ void rotate(uint8_t highPin, uint8_t lowPin, unsigned long delayTime)
 void stop(uint8_t pin1, uint8_t pin2, unsigned long delayTime)
 {
   digitalWrite(pin1, HIGH);
-  digitalWrite(pin2, LOW)
+  digitalWrite(pin2, LOW);
   delay(delayTime);
 }
