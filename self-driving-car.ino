@@ -1,16 +1,25 @@
 #define DIGITAL_PINS 4
-#define ROTATE_PIN1_M1 12
-#define ROTATE_PIN2_M1 11
-#define ROTATE_PIN1_M2 9
-#define ROTATE_PIN2_M2 10
+#define POSITIVE_PIN_M1 11
+#define NEGATIVE_PIN_M1 12
+#define POSITIVE_PIN_M2 10
+#define NEGATIVE_PIN_M2 9
+#define FORWARD 1
+#define BACKWARD 0
+#define RIGHT 1
+#define LEFT 0
 
 typedef struct{
   uint8_t positivePin;
   uint8_t negativePin;
 } Motor_t;
 
-Motor_t motor1;
-Motor_t motor2;
+void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin);
+void rotateMotor(Motor_t *motor, uint8_t rotateMode);
+void stopMotor(Motor_t *motor);
+void steerMotor(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steerMode);
+
+Motor_t rightMotor;
+Motor_t leftMotor;
 
 // Setting up.
 void setup() {
@@ -18,10 +27,10 @@ void setup() {
 
   // Setting up the pins.
   uint8_t pins[DIGITAL_PINS] = {
-    ROTATE_PIN1_M1,
-    ROTATE_PIN2_M2,
-    ROTATE_PIN1_M2,
-    ROTATE_PIN2_M2
+    POSITIVE_PIN_M1,
+    NEGATIVE_PIN_M1,
+    POSITIVE_PIN_M2,
+    NEGATIVE_PIN_M2
   };
   for (uint8_t i = 0; i < DIGITAL_PINS; i++)
   {
@@ -29,17 +38,21 @@ void setup() {
   }
 
   // Setting up motors.
-  motorInit(&motor1, ROTATE_PIN1_M1, ROTATE_PIN2_M1);
-  motorInit(&motor2, ROTATE_PIN1_M2, ROTATE_PIN2_M2);
+  motorInit(&rightMotor, POSITIVE_PIN_M1, NEGATIVE_PIN_M1);
+  motorInit(&leftMotor, POSITIVE_PIN_M2, NEGATIVE_PIN_M2);
 }
 
 // TODO: 
 void loop() {
   // put your main code here, to run repeatedly:
-  rotate(&motor1, 1);
-  stopMotor(&motor1, 1000);
-  rotate(&motor2, 0);
-  stopMotor(&motor2, 2000);
+  rotateMotor(&rightMotor, FORWARD);
+  delay(1000);
+  stopMotor(&rightMotor);
+  delay(1000);
+  rotateMotor(&leftMotor, BACKWARD);
+  delay(1000);
+  stopMotor(&leftMotor);
+  delay(1000);
 }
 
 void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin)
@@ -52,9 +65,9 @@ void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin)
   rotateMode == 1 -> forward,
   rotateMode == 0 -> backward,
   rotateMode != 1, 0 -> Invalid.*/
-void rotate(Motor_t *motor, uint8_t rotateMode)
+void rotateMotor(Motor_t *motor, uint8_t rotateMode)
 {
-  if(rotateMode != 1 || rotateMode != 0)
+  if(rotateMode != FORWARD && rotateMode != BACKWARD)
   {
     Serial.println("Invalid rotate mode!");
     return;
@@ -65,9 +78,24 @@ void rotate(Motor_t *motor, uint8_t rotateMode)
 }
 
 // Stops the motor by making both the pins it is connected to into low.
-void stopMotor(Motor_t *motor, unsigned long delayTime)
+void stopMotor(Motor_t *motor)
 {
   digitalWrite(motor->positivePin, LOW);
   digitalWrite(motor->negativePin, LOW);
-  delay(delayTime);
+}
+
+/*Steers the motors of the car:
+  steerMode = 1 -> steer right,
+  steerMode = 0 -> steer left,
+  steerMode != 1, 0 -> Invalid.*/
+void steerMotor(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steerMode)
+{
+  if(steerMode != RIGHT && steerMode != LEFT)
+  {
+    Serial.println("Invalid rotate mode!");
+    return;
+  }
+
+  rotateMotor(rightMotor, (steerMode + 1) % 2);
+  rotateMotor(leftMotor, steerMode % 2);
 }
