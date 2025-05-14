@@ -6,9 +6,8 @@
 
 
 
-
+// Setting up the pins.
 void setup() {
-  // put your setup code here, to run once:
   uint8_t pins[DIGITAL_PINS] = {
     ROTATE_RIGHT_PIN_M1,
     ROTATE_LEFT_PIN_M1,
@@ -21,17 +20,24 @@ void setup() {
   }
 }
 
+// TODO: 
 void loop() {
   // put your main code here, to run repeatedly:
 
 }
 
-
-void rotateRight(uint8_t highPin, uint8_t lowPin, unsigned long delayTime)
+// Rotates the motor in a specific direction according to low and high voltage logic digital pin.
+void rotate(uint8_t highPin, uint8_t lowPin, unsigned long delayTime)
 {
   digitalWrite(highPin, HIGH);
   digitalWrite(lowPin, LOW);
   delay(delayTime);
 }
 
-void
+// Stops the motor by making both the pins it is connected to into low.
+void stop(uint8_t pin1, uint8_t pin2, unsigned long delayTime)
+{
+  digitalWrite(pin1, HIGH);
+  digitalWrite(pin2, LOW)
+  delay(delayTime);
+}
