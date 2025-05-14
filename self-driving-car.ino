@@ -55,6 +55,7 @@ void loop() {
   delay(1000);
 }
 
+/*Initialize the motor terminals according to the pins used from H bridge motor driver.*/
 void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin)
 {
   motor->positivePin = positivePin;
@@ -92,7 +93,7 @@ void steerMotor(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steerMode)
 {
   if(steerMode != RIGHT && steerMode != LEFT)
   {
-    Serial.println("Invalid rotate mode!");
+    Serial.println("Invalid steer mode!");
     return;
   }
 
