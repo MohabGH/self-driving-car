@@ -3,6 +3,7 @@
 /*Initialize the motor terminals according to the pins used from H bridge motor driver.*/
 void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin, uint8_t speedPin)
 {
+  Serial.begin(9600);
   uint8_t pins[] = {positivePin, negativePin, speedPin};
   for (int i = 0; i < 3; i++) pinMode(pins[i], OUTPUT);
   motor->positivePin = positivePin;
@@ -24,7 +25,7 @@ void rotateMotor(Motor_t *motor, uint8_t rotateMode, uint8_t speed)
 
   digitalWrite(motor->positivePin, rotateMode % 2);
   digitalWrite(motor->negativePin, (rotateMode + 1) % 2);
-  if(motor->speedPin != -1) analogWrite(motor->speedPin, speed);
+  if(motor->speedPin != NO_PIN && speed < 256 && speed > 0) analogWrite(motor->speedPin, speed);
 }
 
 // Stops the motor by making both the pins it is connected to into low.
@@ -53,5 +54,5 @@ void steerMotor(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steerMode, uint
 /*Changes the speed of a specific motor without using rotateMotor function again.*/
 void changeMotorSpeed(Motor_t *motor, uint8_t speed)
 {
-  if(motor->speedPin != -1) analogWrite(motor->speedPin, speed);
+  if(motor->speedPin != NO_PIN) analogWrite(motor->speedPin, speed);
 }

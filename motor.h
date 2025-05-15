@@ -1,5 +1,5 @@
-#ifndef Motor_h
-#define Motor_h
+#ifndef MOTOR_H
+#define MOTOR_H
 
 #define NO_PIN -1
 #define FORWARD 1
