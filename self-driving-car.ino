@@ -15,7 +15,7 @@
 typedef struct{
   uint8_t positivePin;
   uint8_t negativePin;
-  uint8_t speedPin;
+  int8_t speedPin;
 } Motor_t;
 
 void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin, uint8_t speedPin);
@@ -113,5 +113,5 @@ void steerMotor(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steerMode, uint
 /*Changes the speed of a specific motor without using rotateMotor function again.*/
 void changeMotorSpeed(Motor_t *motor, uint8_t speed)
 {
-  analogWrite(motor->speedPin, speed);
+  if(motor->speedPin != -1) analogWrite(motor->speedPin, speed);
 }
