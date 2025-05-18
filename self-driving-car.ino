@@ -13,11 +13,14 @@
 #define SERVO_PIN 3
 #define RIGHT 1
 #define LEFT 0
+#define SPEED 80
+#define STRAIGHT -2
+#define ROTATE -3
 
 void rotateInPlace(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steeringMode, unsigned int delayTime, uint8_t speed);
 void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode, unsigned int delayTime, uint8_t speed);
 void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor);
-void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic);
+void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t speed);
 
 Motor_t rightMotor;
 Motor_t leftMotor;
@@ -36,7 +39,8 @@ void setup() {
 
   // Initializing servo
   servo.attach(SERVO_PIN);
-  servo.write(0);
+  servo.write(90);
+  delay(500);
 }
 
 // TODO:
@@ -44,18 +48,13 @@ float objectDistance = 0;
 unsigned long degrees = 0;
 void loop() {
   objectDistance = ultrasonicGetDistance(&ultrasonic);
+  moveStraight(&rightMotor, &leftMotor, FORWARD, 0, SPEED);
   Serial.println(objectDistance);
- // if(ultrasonicGetDistance(&ultrasonic) < 10) obstacleAvoidance(&rightMotor, &leftMotor, &ultrasonic, 80);
- degrees = 0;
- for(; objectDistance >= 10; degrees++)
- {
-  servo.write(degrees % 180);
-  delay(150);
-  objectDistance = ultrasonicGetDistance(&ultrasonic);
-  Serial.println(objectDistance);
- }
- Serial.println(degrees);
- delay(5000);
+  if(objectDistance <= 20)
+  {
+    Serial.println(objectDistance);
+    obstacleAvoidance(&rightMotor, &leftMotor, &ultrasonic, SPEED);
+  }
 }
 
 /*This function makes the car rotate in place
@@ -73,7 +72,7 @@ void rotateInPlace(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steeringMode
 /*Makes the car move in a straight line.
   rightMotor -> The wheel on the right of the car.
   leftMotor -> The wheel on the left of the car.
-  straightMode -> Decides wheter the caris going to move FORWARD or BACKWARD
+  straightMode -> Decides wheter the caris going to move FORWARD or BACKWARD.
   delayTime -> Decides the delay time (milliSeconds) the car is going to rotate in.*/
 void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode, unsigned int delayTime, uint8_t speed)
 {
@@ -82,10 +81,15 @@ void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode,
   delay(delayTime);
 }
 
-void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor)
+void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t previousMode, uint8_t speed)
 {
-  stopMotor(rightMotor);
-  stopMotor(leftMotor);
+    for(int i = speed; i > 50; i--)
+    {
+      moveStraight(rightMotor, leftMotor, FORWARD, 0, speed);
+      delay(50);
+    }
+    stopMotor(rightMotor);
+    stopMotor(leftMotor);
 }
 
 /*Makes the car make a decision if it found an obstacle in front of it
@@ -99,17 +103,23 @@ void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ul
   unsigned int leftDistance = 0;
 
   // Look at the right direction and get the distance.
-  rotateInPlace(rightMotor, leftMotor, RIGHT, 500, speed);
+  servo.write(0);
+  delay(500);
   rightDistance = ultrasonicGetDistance(ultrasonic);
+  delay(150);
 
   // Look at the left direction and get the distance.
-  rotateInPlace(rightMotor, leftMotor, LEFT, 1000, speed);
+  servo.write(180);
+  delay(500);
   leftDistance = ultrasonicGetDistance(ultrasonic);
+  delay(150);
 
-  if(leftDistance >= rightDistance) moveStraight(rightMotor, leftMotor, FORWARD, 1000, speed);
-  else
-  {
-    rotateInPlace(rightMotor, leftMotor, RIGHT, 1000, speed);
-    moveStraight(rightMotor, leftMotor, FORWARD, 1000, speed);
-  }
+  // Go back to starting position.
+  servo.write(90);
+  delay(500);
+
+  if(leftDistance >= rightDistance) rotateInPlace(rightMotor, leftMotor, LEFT, 500, speed);
+  else rotateInPlace(rightMotor, leftMotor, RIGHT, 500, speed);
+  stopMoving(rightMotor, leftMotor);
+  delay(2000);
 }
