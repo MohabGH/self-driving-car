@@ -14,7 +14,8 @@
 
 // Setting up.
 void setup() {
-
+  pinMode(POSITIVE_PIN_M1, OUTPUT);
+  digitalWrite(POSITIVE_PIN_M1, HIGH);
 }
 
 // TODO:
