@@ -28,7 +28,7 @@ void moveMotor(Motor_t *motor, uint8_t movingMode, uint8_t speed)
   /*Checks if there's a speed pin or not.
     If it exists, the speed is going to get modified by the value that got passed
     If not, the function will ignore the value of the speed passed into it.*/
-  if(motor->speedPin != NO_PIN && speed < 256 && speed >= 0) analogWrite(motor->speedPin, speed);
+  if(motor->speedPin != NO_PIN || (speed < 256 && speed >= 0)) analogWrite(motor->speedPin, speed);
 
   /*For the motor to move forward, the positivePin needs to be HIGH and the negative pin needs to be LOW.
     This section of code make use of the fact that HIGH = 0x1 and LOW = 0x0.
@@ -54,5 +54,5 @@ void changeMotorSpeed(Motor_t *motor, uint8_t speed)
 {
   /*If there's a pin for the speed, and the speed is in the valid range, The motor speed will change.
     If not, this function does nothing.*/
-  if(motor->speedPin != NO_PIN && speed < 256 && speed >= 0) analogWrite(motor->speedPin, speed);
+  if(motor->speedPin != NO_PIN || (speed < 256 && speed >= 0)) analogWrite(motor->speedPin, speed);
 }

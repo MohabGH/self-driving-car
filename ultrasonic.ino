@@ -19,7 +19,7 @@ void ultrasonicInit(Ultrasonic_t *ultrasonic, uint8_t triggerPin, uint8_t echoPi
 and getting back the reading using the echoPin.
   The reading the Arduino got from the echoPin will be put in an equation to get the distance in centimeters.
   ultrasonic -> an ultrasonic that is being used.*/
-unsigned long ultrasonicGetDistance(Ultrasonic_t *ultrasonic)
+unsigned int ultrasonicGetDistance(Ultrasonic_t *ultrasonic)
 {
   /*Starting the ultrasonic according to the datasheet instructions.*/
   digitalWrite(ultrasonic->triggerPin, LOW);
