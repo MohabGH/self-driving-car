@@ -29,7 +29,7 @@ unsigned long ultrasonicGetDistance(Ultrasonic_t *ultrasonic)
   digitalWrite(ultrasonic->triggerPin, LOW);
 
   /*Getting the time the echoPin stayed HIGH in.*/
-  unsigned int pulseTime = pulseIn(ultrasonic->echoPin, HIGH);
+  unsigned long pulseTime = pulseIn(ultrasonic->echoPin, HIGH);
 
   /*The equation with which the distance is being determined
     distance (centimeters) = speed of sound (centimeters in microSecond) * (overall time of travel * 0.5)
@@ -39,5 +39,5 @@ unsigned long ultrasonicGetDistance(Ultrasonic_t *ultrasonic)
     Time of travelling away from the Ultrasonic = Time of travelling into the Ultrasonic. This is the reason why 0.5 is in the equation*/
   unsigned int distance = 0.0343 * (pulseTime * 0.5);
   
-  return distance
+  return distance;
 }

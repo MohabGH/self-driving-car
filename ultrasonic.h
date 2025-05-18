@@ -1,3 +1,5 @@
+/*The ultrasonic library is used to make operations using the ultrasonic with the Arduino*/
+
 #ifndef ULTRASONIC_H
 #define ULTRASONIC_H
 
