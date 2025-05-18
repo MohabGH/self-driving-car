@@ -8,8 +8,8 @@
 #define NEGATIVE_PIN_M2 A1
 #define SPEED_PIN_M1 5
 #define SPEED_PIN_M2 6
-#define ULTRASONIC_TRIGGER_PIN 8
-#define ULTRASONIC_ECHO_PIN 7
+#define ULTRASONIC_TRIGGER_PIN 4
+#define ULTRASONIC_ECHO_PIN 2
 #define SERVO_PIN 3
 #define RIGHT 1
 #define LEFT 0
@@ -41,16 +41,21 @@ void setup() {
 
 // TODO:
 float objectDistance = 0;
+unsigned long degrees = 0;
 void loop() {
   objectDistance = ultrasonicGetDistance(&ultrasonic);
   Serial.println(objectDistance);
  // if(ultrasonicGetDistance(&ultrasonic) < 10) obstacleAvoidance(&rightMotor, &leftMotor, &ultrasonic, 80);
-    servo.write(0);
-    delay(1000);
-    servo.write(90);
-    delay(1000);
-    servo.write(180);
-    delay(1000);
+ degrees = 0;
+ for(; objectDistance >= 10; degrees++)
+ {
+  servo.write(degrees % 180);
+  delay(150);
+  objectDistance = ultrasonicGetDistance(&ultrasonic);
+  Serial.println(objectDistance);
+ }
+ Serial.println(degrees);
+ delay(5000);
 }
 
 /*This function makes the car rotate in place
