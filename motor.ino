@@ -1,9 +1,9 @@
 #include "motor.h"
 
 /*Initialize the H bridge module to control the motor using another functions.
-  motor -> a pointer to a motor that need modification.
+  motor -> A pointer to a motor that is going to be used.
   positivePin -> The pin which when is HIGH and negativePin is LOW, the motor would rotate forward. (and vice versa).
-  speedPin -> the pin that controls the speed of the motor.*/
+  speedPin -> The pin that controls the speed of the motor.*/
 void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin, uint8_t speedPin)
 {
   /*Begins a serial connections for debugging.*/
@@ -23,7 +23,7 @@ void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin, uint8_t
 speed is a value between 0 and 255*/
 void moveMotor(Motor_t *motor, uint8_t movingMode, uint8_t speed)
 {
-  // Checking the movingMode is either FORWARD or BACKWARD.
+  // Checking that the movingMode is either FORWARD or BACKWARD.
   if(movingMode != FORWARD && movingMode != BACKWARD)
   {
     Serial.println("Invalid rotate mode!");
@@ -43,7 +43,7 @@ void moveMotor(Motor_t *motor, uint8_t movingMode, uint8_t speed)
 }
 
 /*Stops a specific motor from moving.
-  motor -> the motor that needs to be modified.*/
+  motor ->A pointer to the motor that needs to be modified.*/
 void stopMotor(Motor_t *motor)
 {
   /*The function assgines both positive and negative pins to LOW to stop the motor from moving.*/
@@ -52,7 +52,7 @@ void stopMotor(Motor_t *motor)
 }
 
 /*Changes the speed of a specific motor without moving or stopping the motor.
-  motor -> The motor that needs to be modified.
+  motor -> A pointer to the motor that needs to be modified.
   speed -> The new speed of the motor.*/
 void changeMotorSpeed(Motor_t *motor, uint8_t speed)
 {
