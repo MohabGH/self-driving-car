@@ -13,13 +13,13 @@
 #define SERVO_PIN 3
 #define RIGHT 1
 #define LEFT 0
-#define SPEED 50
+#define SPEED 71
 #define STRAIGHT -2
 #define ROTATE -3
 
 void rotateInPlace(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steeringMode, unsigned int delayTime, uint8_t speed);
 void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode, unsigned int delayTime, uint8_t speed);
-void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t speed);
+void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor);
 void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t speed);
 
 Motor_t rightMotor;
@@ -47,7 +47,10 @@ void setup() {
 float objectDistance = 0;
 unsigned long degrees = 0;
 void loop() {
-  moveMotor(&leftMotor, FORWARD, SPEED);
+  // moveMotor(&rightMotor, FORWARD, SPEED);
+  moveStraight(&rightMotor, &leftMotor, FORWARD, 10000, SPEED);
+  stopMoving(&rightMotor, &leftMotor);
+  delay(2000);
   /*objectDistance = ultrasonicGetDistance(&ultrasonic);
   moveStraight(&rightMotor, &leftMotor, FORWARD, 0, SPEED);
   Serial.println(objectDistance);
@@ -82,14 +85,10 @@ void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode,
   delay(delayTime);
 }
 
-void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t speed)
+void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor)
 {
-    for(int i = speed; i > 0; i--)
-    {
-      moveStraight(rightMotor, leftMotor, FORWARD, 10, i);
-    }
-    stopMotor(rightMotor);
-    stopMotor(leftMotor);
+  stopMotor(rightMotor);
+  stopMotor(leftMotor);
 }
 
 /*Makes the car make a decision if it found an obstacle in front of it
@@ -97,7 +96,7 @@ void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t speed)
     The car is going to see in its left and right directions and walk in the more distanced direction.*/
 void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t speed)
 {
-  stopMoving(rightMotor, leftMotor, SPEED);
+  stopMoving(rightMotor, leftMotor);
   delay(1000);
   // The variables with which we will get the right and left distance
   unsigned int rightDistance = 0;
@@ -121,6 +120,6 @@ void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ul
 
   if(leftDistance >= rightDistance) rotateInPlace(rightMotor, leftMotor, LEFT, 500, speed);
   else rotateInPlace(rightMotor, leftMotor, RIGHT, 500, speed);
-  stopMoving(rightMotor, leftMotor, SPEED);
+  stopMoving(rightMotor, leftMotor);
   delay(2000);
 }
