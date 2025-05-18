@@ -15,6 +15,6 @@ typedef struct{
 } Ultrasonic_t;
 
 void ultrasonicInit(Ultrasonic_t *ultrasonic, uint8_t triggerPin, uint8_t echoPin);
-unsigned int ultrasonicGetDistance(Ultrasonic_t *ultrasonic);
+float ultrasonicGetDistance(Ultrasonic_t *ultrasonic);
 
 #endif

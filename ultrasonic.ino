@@ -9,7 +9,7 @@ void ultrasonicInit(Ultrasonic_t *ultrasonic, uint8_t triggerPin, uint8_t echoPi
 {
   /*Assigning the passed pins to the correct pin modes*/
   pinMode(triggerPin, OUTPUT);
-  pinMode(triggerPin, INPUT);
+  pinMode(echoPin, INPUT);
   /*Assgining these same pins to the ultrasonic struct.*/
   ultrasonic->triggerPin = triggerPin;
   ultrasonic->echoPin = echoPin;
@@ -19,7 +19,7 @@ void ultrasonicInit(Ultrasonic_t *ultrasonic, uint8_t triggerPin, uint8_t echoPi
 and getting back the reading using the echoPin.
   The reading the Arduino got from the echoPin will be put in an equation to get the distance in centimeters.
   ultrasonic -> an ultrasonic that is being used.*/
-unsigned int ultrasonicGetDistance(Ultrasonic_t *ultrasonic)
+float ultrasonicGetDistance(Ultrasonic_t *ultrasonic)
 {
   /*Starting the ultrasonic according to the datasheet instructions.*/
   digitalWrite(ultrasonic->triggerPin, LOW);
@@ -37,7 +37,7 @@ unsigned int ultrasonicGetDistance(Ultrasonic_t *ultrasonic)
     speed of sound -> 0.0343 centimeters / microSecond.
     time of travel -> The time the sound took to travel away and into the Ultrasonic sensor.
     Time of travelling away from the Ultrasonic = Time of travelling into the Ultrasonic. This is the reason why 0.5 is in the equation*/
-  unsigned int distance = 0.0343 * (pulseTime * 0.5);
+  float distance = 0.0343 * (pulseTime * 0.5);
   
   return distance;
 }
