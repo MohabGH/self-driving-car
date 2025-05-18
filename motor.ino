@@ -25,7 +25,7 @@ void rotateMotor(Motor_t *motor, uint8_t rotateMode, uint8_t speed)
 
   digitalWrite(motor->positivePin, rotateMode % 2);
   digitalWrite(motor->negativePin, (rotateMode + 1) % 2);
-  if(motor->speedPin != NO_PIN && speed < 256 && speed > 0) analogWrite(motor->speedPin, speed);
+  if(motor->speedPin != NO_PIN && speed < 256 && speed >= 0) analogWrite(motor->speedPin, speed);
 }
 
 // Stops the motor by making both the pins it is connected to into low.
