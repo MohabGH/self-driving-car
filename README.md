@@ -7,6 +7,8 @@ Minimum Speed in Air: 65
 Minimum Speed in Air: 65
 
 ## Both left and right motors
-leftMotor spins at 69
-rightMotor spins at 71
+leftMotor starts to spin at 69.
+rightMotor starts to spin at 73.
+It is safer to make the speed more than these points.
+Maybe make the threshold 75.
 

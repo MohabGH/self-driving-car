@@ -13,14 +13,16 @@
 #define SERVO_PIN 3
 #define RIGHT 1
 #define LEFT 0
-#define SPEED 71
 #define STRAIGHT -2
 #define ROTATE -3
 
+uint8_t rightSpeed = 0;
+uint8_t leftSpeed = 0;
+
 void rotateInPlace(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steeringMode, unsigned int delayTime, uint8_t speed);
-void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode, unsigned int delayTime, uint8_t speed);
+void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode, unsigned int delayTime, uint8_t rightSpeed, uint8_t leftSpeed);
 void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor);
-void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t speed);
+void avoidObstacle(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t speed);
 
 Motor_t rightMotor;
 Motor_t leftMotor;
@@ -29,7 +31,6 @@ Servo servo;
 
 // Setting up.
 void setup() {
-  Serial.begin(9600);
   // Initializing motors for controlling them.
   motorInit(&rightMotor, POSITIVE_PIN_M1, NEGATIVE_PIN_M1, SPEED_PIN_M1);
   motorInit(&leftMotor, POSITIVE_PIN_M2, NEGATIVE_PIN_M2, SPEED_PIN_M2);
@@ -47,18 +48,15 @@ void setup() {
 float objectDistance = 0;
 unsigned long degrees = 0;
 void loop() {
-  // moveMotor(&rightMotor, FORWARD, SPEED);
-  moveStraight(&rightMotor, &leftMotor, FORWARD, 10000, SPEED);
-  stopMoving(&rightMotor, &leftMotor);
-  delay(2000);
-  /*objectDistance = ultrasonicGetDistance(&ultrasonic);
-  moveStraight(&rightMotor, &leftMotor, FORWARD, 0, SPEED);
-  Serial.println(objectDistance);
+  leftSpeed = 76;
+  rightSpeed = 87;
+  objectDistance = ultrasonicGetDistance(&ultrasonic);
+  moveStraight(&rightMotor, &leftMotor, FORWARD, 0, rightSpeed, leftSpeed);
   if(objectDistance <= 20)
   {
-    Serial.println(objectDistance);
-    obstacleAvoidance(&rightMotor, &leftMotor, &ultrasonic, SPEED);
-  }*/
+    rightSpeed = 150;
+    avoidObstacle(&rightMotor, &leftMotor, &ultrasonic, rightSpeed);
+  }
 }
 
 /*This function makes the car rotate in place
@@ -77,14 +75,19 @@ void rotateInPlace(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steeringMode
   rightMotor -> The wheel on the right of the car.
   leftMotor -> The wheel on the left of the car.
   straightMode -> Decides wheter the caris going to move FORWARD or BACKWARD.
-  delayTime -> Decides the delay time (milliSeconds) the car is going to rotate in.*/
-void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode, unsigned int delayTime, uint8_t speed)
+  delayTime -> Decides the delay time (milliSeconds) the car is going to rotate in.
+  rightSpeed -> The speed of the wheel on the right.
+  leftSpeed -> The speed of the wheel on the left.*/
+void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode, unsigned int delayTime, uint8_t rightSpeed, uint8_t leftSpeed)
 {
-  moveMotor(rightMotor, straightMode, speed);
-  moveMotor(leftMotor, straightMode, speed);
+  moveMotor(rightMotor, straightMode, rightSpeed);
+  moveMotor(leftMotor, straightMode, leftSpeed);
   delay(delayTime);
 }
 
+/*Makes the car stop moving
+  rightMotor -> The wheel on the right of the car.
+  leftMotor -> The wheel on the left of the car.*/
 void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor)
 {
   stopMotor(rightMotor);
@@ -94,7 +97,7 @@ void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor)
 /*Makes the car make a decision if it found an obstacle in front of it
   initially:
     The car is going to see in its left and right directions and walk in the more distanced direction.*/
-void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t speed)
+void avoidObstacle(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t speed)
 {
   stopMoving(rightMotor, leftMotor);
   delay(1000);
@@ -118,8 +121,8 @@ void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ul
   servo.write(90);
   delay(500);
 
-  if(leftDistance >= rightDistance) rotateInPlace(rightMotor, leftMotor, LEFT, 500, speed);
-  else rotateInPlace(rightMotor, leftMotor, RIGHT, 500, speed);
+  if(leftDistance >= rightDistance) rotateInPlace(rightMotor, leftMotor, LEFT, 180, speed);
+  else rotateInPlace(rightMotor, leftMotor, RIGHT, 180, speed);
   stopMoving(rightMotor, leftMotor);
   delay(2000);
 }
