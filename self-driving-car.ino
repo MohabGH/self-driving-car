@@ -1,5 +1,6 @@
 #include "ultrasonic.h"
 #include "motor.h"
+#include "infrared-sensor.h"
 #include <Servo.h>
 
 #define POSITIVE_PIN_M1 A5
@@ -13,8 +14,10 @@
 #define SERVO_PIN 3
 #define RIGHT 1
 #define LEFT 0
-#define STRAIGHT -2
-#define ROTATE -3
+#define INFRARED_RIGHT_PIN 8
+#define INFRARED_LEFT_PIN 7
+#define DARK 1
+#define LIGHT 0
 
 uint8_t rightSpeed = 0;
 uint8_t leftSpeed = 0;
@@ -23,14 +26,21 @@ void rotateInPlace(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t steeringMode
 void moveStraight(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t straightMode, unsigned int delayTime, uint8_t rightSpeed, uint8_t leftSpeed);
 void stopMoving(Motor_t *rightMotor, Motor_t *leftMotor);
 void avoidObstacle(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t speed);
+void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t originalRightSpeed, uint8_t originalLeftSpeed);
 
 Motor_t rightMotor;
 Motor_t leftMotor;
 Ultrasonic_t ultrasonic;
+InfraredSensor_t infraredSensorRight;
+InfraredSensor_t infraredSensorLeft;
 Servo servo;
 
 // Setting up.
 void setup() {
+  Serial.begin(9600);
+  // Initializing the infrared sensor
+  infraredInit(&infraredSensorRight, INFRARED_RIGHT_PIN);
+  infraredInit(&infraredSensorLeft, INFRARED_LEFT_PIN);
   // Initializing motors for controlling them.
   motorInit(&rightMotor, POSITIVE_PIN_M1, NEGATIVE_PIN_M1, SPEED_PIN_M1);
   motorInit(&leftMotor, POSITIVE_PIN_M2, NEGATIVE_PIN_M2, SPEED_PIN_M2);
@@ -48,6 +58,12 @@ void setup() {
 float objectDistance = 0;
 unsigned long degrees = 0;
 void loop() {
+  leftSpeed = 70 ;
+  rightSpeed = 70 ;
+  //oneLineTraceMode(&infraredSensorRight, &infraredSensorLeft, &rightMotor, &leftMotor, rightSpeed, leftSpeed); -> for always tracing while moving
+  oneLineTraceModeModified(&infraredSensorRight, &infraredSensorLeft, &rightMotor, &leftMotor, rightSpeed, leftSpeed); // stop to steer then move again
+  /*
+  This code is going to be for the obstacle avoidance
   leftSpeed = 76;
   rightSpeed = 87;
   objectDistance = ultrasonicGetDistance(&ultrasonic);
@@ -56,7 +72,27 @@ void loop() {
   {
     rightSpeed = 150;
     avoidObstacle(&rightMotor, &leftMotor, &ultrasonic, rightSpeed);
+  }*/
+  /*leftSpeed = 76;
+  rightSpeed = 87;
+
+  int leftIR = digitalRead(IR_LEFT_PIN);
+  int rightIR = digitalRead(IR_RIGHT_PIN);
+
+  if (leftIR == HIGH && rightIR == HIGH) {
+    moveStraight(&rightMotor, &leftMotor, FORWARD, 0, rightSpeed, leftSpeed);
   }
+  else if (leftIR == LOW && rightIR == HIGH) {
+    rotateInPlace(&rightMotor, &leftMotor, RIGHT, 0, speed);
+  }
+  else if (leftIR == HIGH && rightIR == LOW) {
+    rotateInPlace(&rightMotor,&leftMotor, LEFT, 0, speed);
+  }
+  else {
+    stopMotor(&rightMotor);
+    stopMotor(&leftMotor);
+  }
+  delay(30);*/
 }
 
 /*This function makes the car rotate in place
@@ -125,4 +161,72 @@ void avoidObstacle(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultras
   else rotateInPlace(rightMotor, leftMotor, RIGHT, 180, speed);
   stopMoving(rightMotor, leftMotor);
   delay(2000);
+}
+
+/*void lineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *InfraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor)
+{
+  // If right light
+  if(getPinState(infraredSensorRight) == DARK && getPinState(infraredSensorLeft) == DARK)
+  {
+    stopMoving(rightMotor, leftMotor);
+  }
+  // make right wheel more speed than left wheel
+  else if(getPinState(infraredSensorRight) == DARK && getPinState(infraredSensorLeft) == LIGHT)
+  {
+    changeMotorSpeed(, );
+  }
+  // If not right light
+    // make left wheel more speed than right wheel
+  // If right and left light
+    // stop
+}*/
+
+void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t originalRightSpeed, uint8_t originalLeftSpeed)
+{
+  while(getInfraredState(infraredSensorRight) == DARK)
+  {
+    if(getInfraredState(infraredSensorLeft) == DARK)
+    {
+      stopMoving(rightMotor, leftMotor);
+      break;
+    }
+    Serial.println("DARK LEFT");
+    changeMotorSpeed(leftMotor, originalLeftSpeed + 35);
+  }
+  changeMotorSpeed(leftMotor, originalLeftSpeed);
+  while(getInfraredState(infraredSensorLeft) == DARK)
+  {
+    if(getInfraredState(infraredSensorRight) == DARK)
+    {
+      stopMoving(rightMotor, leftMotor);
+      break;
+    }
+    Serial.println("DARK RIGHT");
+    changeMotorSpeed(rightMotor, originalRightSpeed + 35);
+  }
+  changeMotorSpeed(rightMotor, originalRightSpeed);
+}
+
+void oneLineTraceModeModified(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t originalRightSpeed, uint8_t originalLeftSpeed)
+{
+  while(getInfraredState(infraredSensorRight) == DARK)
+  {
+    if(getInfraredState(infraredSensorLeft) == DARK)
+    {
+      stopMoving(rightMotor, leftMotor);
+      break;
+    }
+    rotateInPlace(rightMotor, leftMotor, RIGHT, 0, originalRightSpeed);
+  }
+  moveStraight(rightMotor, leftMotor, FORWARD, 0, originalRightSpeed, originalLeftSpeed);
+  while(getInfraredState(infraredSensorLeft) == DARK)
+  {
+    if(getInfraredState(infraredSensorRight) == DARK)
+    {
+      stopMoving(rightMotor, leftMotor);
+      break;
+    }
+    rotateInPlace(rightMotor, leftMotor, LEFT, 0, originalRightSpeed);
+  }
+  moveStraight(rightMotor, leftMotor, FORWARD, 0, originalRightSpeed, originalLeftSpeed);
 }
