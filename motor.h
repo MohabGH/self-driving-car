@@ -15,7 +15,7 @@ All functions and structs are defined according to the POV of the arduino*/
   If the positivePin is HIGH and negativePin is LOW, the motor rotates FORWARD.
   If the positivePin is LOW and negativePin is HIGH, the motor rotates BACKWARD.
   The speed pin is optional for controlling the speed of the motor using the H bridge.
-  If the used didn't need to control the speed then the used should assign the speedPin to NO_PIN and should connect the enable pin to 5V*/
+  If the user didn't need to control the speed then the user should assign the speedPin to NO_PIN and should connect the enable pin to 5V*/
 typedef struct{
   uint8_t positivePin;
   uint8_t negativePin;

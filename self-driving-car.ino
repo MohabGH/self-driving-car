@@ -47,8 +47,8 @@
 LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);
 
 void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t rightSpeed, uint8_t leftSpeed, unsigned int thresholdDistance);
-void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t originalRightSpeed, uint8_t originalLeftSpeed);
-void oneLineTraceModeModified(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t originalRightSpeed, uint8_t originalLeftSpeed);
+void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rightSpeed, uint8_t leftSpeed);
+void oneLineTraceModeModified(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rightSpeed, uint8_t leftSpeed);
 
 Motor_t rightMotor;
 Motor_t leftMotor;
@@ -87,7 +87,7 @@ void setup() {
   delay(500);
 }
 
-// TODO:
+// Necessary variables for car operation.
 unsigned int thresholdDistance = 0;
 unsigned int rotationSpeed = 0;
 uint8_t rightSpeed = 0;
@@ -103,6 +103,7 @@ void loop() {
     delay(200);
   }
 
+  // The abstacle avoidance mode.
   if(mode == OBSTACLE_AVOIDANCE)
   {
     Serial.println("Obstacle");
@@ -114,7 +115,8 @@ void loop() {
     rotationSpeed = 100;
     obstacleAvoidance(&rightMotor, &leftMotor, &ultrasonic, rightSpeed, leftSpeed, thresholdDistance, rotationSpeed);
   }
-  else if(mode == LINE_FOLLOWING_NO_STOP)
+  // The line following mode. Stops to modify the orientation then moves again.
+  else if(mode == LINE_FOLLOWING_STOP)
   {
     Serial.println("Trace No");
     lcd.setCursor(0, 0);
@@ -123,7 +125,8 @@ void loop() {
     leftSpeed = 90;
     oneLineTraceModeModified(&infraredSensorRight, &infraredSensorLeft, &rightMotor, &leftMotor, rightSpeed, leftSpeed);
   }
-  else if(mode == LINE_FOLLOWING_STOP)
+  // The line follwing mode. Doesn't stop to modify the orientation. It modifies the orientation while moving.
+  else if(mode == LINE_FOLLOWING_NO_STOP)
   {
     Serial.println("Trace Stop");
     lcd.setCursor(0, 0);
@@ -135,8 +138,13 @@ void loop() {
 }
 
 /*Makes the car make a decision if it found an obstacle in front of it
-  initially:
-    The car is going to see in its left and right directions and walk in the more distanced direction.*/
+  The car is going to see in its left and right directions and walk in the more distanced direction.
+  rightMotor -> The right motor of the car.
+  leftMotor -> The left motor of the car.
+  rightSpeed -> The speed of the motor on the right
+  leftSpeed -> The speed of the motor on the left
+  thresholdDistance -> The distance on which it will stop and look left and right.
+  rotationSpeed -> The speed the car is going to rotate in towards the direction that has more distance*/
 void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t rightSpeed, uint8_t leftSpeed, unsigned int thresholdDistance, unsigned int rotationSpeed)
 {
   moveStraight(rightMotor, leftMotor, FORWARD, 0, rightSpeed, leftSpeed);
@@ -144,9 +152,10 @@ void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ul
   Serial.println(distance);
   if(distance < thresholdDistance)
   {
-    Serial.println("in distance");
+    // Stop before looking left or right.
     stopMoving(rightMotor, leftMotor);
     delay(1000);
+
     // The variables with which we will get the right and left distance
     unsigned int rightDistance = 0;
     unsigned int leftDistance = 0;
@@ -167,65 +176,101 @@ void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ul
     servo.write(90);
     delay(500);
 
+    /*If the ultrasonic found the leftDistance is more or equal to the rightDistance, the car is going to rotate left.
+      Otherwise, it is going to rotatoe to the right.*/
     if(leftDistance >= rightDistance) rotateInPlace(rightMotor, leftMotor, LEFT, 180, rotationSpeed);
     else rotateInPlace(rightMotor, leftMotor, RIGHT, 180, rotationSpeed);
+
+    // Stopping for 2 seconds before moving again.
     stopMoving(rightMotor, leftMotor);
     delay(2000);
   }
 }
 
-void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t originalRightSpeed, uint8_t originalLeftSpeed)
+/*This mode traces a line and continues moving while changing the orientation.
+  infraredSensorRight -> The sensor on the right of the car.
+  infraredSensorLeft -> The sensor on the left of the car.
+  rightMotor -> The motor on the right of the car.
+  leftMotor -> The motor on the left of the car.
+  rightSpeed -> The speed of the right wheel.
+  leftSpeed -> The speed of the left wheel.*/
+void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rightSpeed, uint8_t leftSpeed)
 {
+  // As long as the right and left sensors are reading LIGHT (LOW), it is going to move straight forward.
   if(getInfraredState(infraredSensorRight) == LIGHT && getInfraredState(infraredSensorLeft) == LIGHT)
   {
-    moveStraight(rightMotor, leftMotor, FORWARD, 0, originalRightSpeed, originalLeftSpeed);
+    moveStraight(rightMotor, leftMotor, FORWARD, 0, rightSpeed, leftSpeed);
   }
+  /*If the sensor on the right found the ground to be DARK (HIGH), it is going to enter the loop.*/
   while(getInfraredState(infraredSensorRight) == DARK)
   {
+    /*If the left sensor is reading DARK like the right sensor, the car is going to stop moving and break.*/
     if(getInfraredState(infraredSensorLeft) == DARK)
     {
       stopMoving(rightMotor, leftMotor);
       break;
     }
+    /*As long as the right sensor is DARK, the car is going to rotate until the right sensor becomes LIGHT again or left sensor becomes DARK.*/
     Serial.println("DARK LEFT");
-    changeMotorSpeed(leftMotor, originalLeftSpeed + 35);
+    changeMotorSpeed(leftMotor, leftSpeed + 35);
   }
-  changeMotorSpeed(leftMotor, originalLeftSpeed);
+  // Changing the motor speed to the normal speed again.
+  changeMotorSpeed(leftMotor, leftSpeed);
+
+  /*If the sensor on the left found the ground to be DARK (HIGH), it is going to enter the loop.*/
   while(getInfraredState(infraredSensorLeft) == DARK)
   {
+    /*If the right sensor is reading DARK like the right sensor, the car is going to stop moving and break.*/
     if(getInfraredState(infraredSensorRight) == DARK)
     {
       stopMoving(rightMotor, leftMotor);
       break;
     }
+    /*As long as the left sensor is DARK, the car is going to rotate until the left sensor becomes LIGHT again or right sesnor becomes DARK.*/
     Serial.println("DARK RIGHT");
-    changeMotorSpeed(rightMotor, originalRightSpeed + 35);
+    changeMotorSpeed(rightMotor, rightSpeed + 35);
   }
-  changeMotorSpeed(rightMotor, originalRightSpeed);
+  // Changing the motor speed to the normal speed again.
+  changeMotorSpeed(rightMotor, rightSpeed);
 }
 
-void oneLineTraceModeModified(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t originalRightSpeed, uint8_t originalLeftSpeed)
+/*This mode traces a line and stops while changing the orientation.
+  infraredSensorRight -> The sensor on the right of the car.
+  infraredSensorLeft -> The sensor on the left of the car.
+  rightMotor -> The motor on the right of the car.
+  leftMotor -> The motor on the left of the car.
+  rightSpeed -> The speed of the right wheel.
+  leftSpeed -> The speed of the left wheel.*/
+void oneLineTraceModeModified(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rightSpeed, uint8_t leftSpeed)
 {
+  // As long as the right and left sensors are reading LIGHT (LOW), it is going to move straight forward.
   if(getInfraredState(infraredSensorRight) == LIGHT && getInfraredState(infraredSensorLeft) == LIGHT)
   {
-    moveStraight(rightMotor, leftMotor, FORWARD, 0, originalRightSpeed, originalLeftSpeed);
+    moveStraight(rightMotor, leftMotor, FORWARD, 0, rightSpeed, leftSpeed);
   }
+  /*If the sensor on the right found the ground to be DARK (HIGH), it is going to enter the loop.*/
   while(getInfraredState(infraredSensorRight) == DARK)
   {
+    /*If the left sensor is reading DARK like the right sensor, the car is going to stop moving and break.*/
     if(getInfraredState(infraredSensorLeft) == DARK)
     {
       stopMoving(rightMotor, leftMotor);
       break;
     }
-    rotateInPlace(rightMotor, leftMotor, RIGHT, 0, originalRightSpeed);
+    /*As long as the right sensor is DARK, the car is going to rotate until the right sensor becomes LIGHT again or left sensor becomes DARK.*/
+    rotateInPlace(rightMotor, leftMotor, RIGHT, 0, rightSpeed);
   }
+
+  /*If the sensor on the left found the ground to be DARK (HIGH), it is going to enter the loop.*/
   while(getInfraredState(infraredSensorLeft) == DARK)
   {
+    /*If the right sensor is reading DARK like the right sensor, the car is going to stop moving and break.*/
     if(getInfraredState(infraredSensorRight) == DARK)
     {
       stopMoving(rightMotor, leftMotor);
       break;
     }
-    rotateInPlace(rightMotor, leftMotor, LEFT, 0, originalRightSpeed);
+    /*As long as the left sensor is DARK, the car is going to rotate until the left sensor becomes LIGHT again or right sesnor becomes DARK.*/
+    rotateInPlace(rightMotor, leftMotor, LEFT, 0, rightSpeed);
   }
 }
