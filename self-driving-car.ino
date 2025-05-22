@@ -99,14 +99,12 @@ void loop() {
   {
     mode++;
     mode = mode % 3;
-    Serial.println(mode);
     delay(200);
   }
 
   // The abstacle avoidance mode.
   if(mode == OBSTACLE_AVOIDANCE)
   {
-    Serial.println("Obstacle");
     lcd.setCursor(0, 0);
     lcd.print(" OBSTACLE AVOID ");
     rightSpeed = 80;
@@ -149,7 +147,6 @@ void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ul
 {
   moveStraight(rightMotor, leftMotor, FORWARD, 0, rightSpeed, leftSpeed);
   float distance = ultrasonicGetDistance(ultrasonic);
-  Serial.println(distance);
   if(distance < thresholdDistance)
   {
     // Stop before looking left or right.
@@ -211,7 +208,6 @@ void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *i
       break;
     }
     /*As long as the right sensor is DARK, the car is going to rotate until the right sensor becomes LIGHT again or left sensor becomes DARK.*/
-    Serial.println("DARK LEFT");
     changeMotorSpeed(leftMotor, leftSpeed + 35);
   }
   // Changing the motor speed to the normal speed again.
@@ -227,7 +223,6 @@ void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *i
       break;
     }
     /*As long as the left sensor is DARK, the car is going to rotate until the left sensor becomes LIGHT again or right sesnor becomes DARK.*/
-    Serial.println("DARK RIGHT");
     changeMotorSpeed(rightMotor, rightSpeed + 35);
   }
   // Changing the motor speed to the normal speed again.
