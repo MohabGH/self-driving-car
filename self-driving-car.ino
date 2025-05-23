@@ -1,5 +1,6 @@
 #include "ultrasonic.h"
 #include "motor.h"
+#include "remote-control.h"
 #include "infrared-sensor.h"
 #include "car.h"
 #include <Servo.h>
@@ -28,20 +29,13 @@
 // Servo definitions.
 #define SERVO_PIN 3
 
-// Rotation definitions.
-#define RIGHT 1
-#define LEFT 0
-
 // Infrared definitions.
 #define INFRARED_RIGHT_PIN 8
 #define INFRARED_LEFT_PIN 7
 #define DARK 1
 #define LIGHT 0
 
-// Modes definitions.
-#define OBSTACLE_AVOIDANCE 0
-#define LINE_FOLLOWING_NO_STOP 1
-#define LINE_FOLLOWING_STOP 2
+// Modes definitions using buttons.
 #define MODE_ALTERATION_PIN 13
 
 LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);
@@ -98,8 +92,7 @@ void loop() {
   // Making the modes variale be scaled to the selected modes.
   if(digitalRead(MODE_ALTERATION_PIN) == LOW)
   {
-    mode++;
-    mode = mode % 3;
+    mode = ++mode % 3;
     delay(200);
   }
 
@@ -272,3 +265,4 @@ void oneLineTraceModeModified(InfraredSensor_t *infraredSensorRight, InfraredSen
     rotateInPlace(rightMotor, leftMotor, LEFT, 0, rotationSpeed);
   }
 }
+

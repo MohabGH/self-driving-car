@@ -20,6 +20,7 @@ typedef struct{
   uint8_t positivePin;
   uint8_t negativePin;
   uint8_t speedPin;
+  uint8_t speed;
 } Motor_t;
 
 void moveMotor(Motor_t *motor, uint8_t movingMode, uint8_t speed);

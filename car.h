@@ -4,6 +4,10 @@ The library leverages the motor.h library to control the car.*/
 #ifndef CAR_H
 #define CAR_H
 
+// Rotation definitions.
+#define RIGHT 1
+#define LEFT 0
+
 #include <stdint.h>
 #include "motor.h"
 #include "ultrasonic.h"
