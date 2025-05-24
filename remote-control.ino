@@ -11,7 +11,7 @@ void remoteControl(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rotationSpee
   unsigned long lastCode = 0;            
   unsigned long lastSignalTime = 0;
   const unsigned long timeout = 200;
-  unsigned long repeatCode = 0;
+  const uint8_t repeatCode = 0;
   while(1)
   {
     if (IrReceiver.decode()) 
@@ -29,7 +29,8 @@ void remoteControl(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rotationSpee
       IrReceiver.resume();
     }
 
-    if (millis() - lastSignalTime <= timeout) {
+    if (millis() - lastSignalTime <= timeout) 
+    {
       if (lastCode == UP) moveStraight(rightMotor, leftMotor, FORWARD, 0, rightSpeed, leftSpeed);
       else if(lastCode == DOWN) moveStraight(rightMotor, leftMotor, BACKWARD, 0, rightSpeed, leftSpeed);
       else if(lastCode == RIGHT_SIDE) rotateInPlace(rightMotor, leftMotor, RIGHT, 0, rotationSpeed);
