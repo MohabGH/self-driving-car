@@ -1,7 +1,7 @@
 #ifndef INFRARED_H
 #define INFRARED_H
 
-typedef struct {
+typedef struct InfraredSensor{
   uint8_t infraredPin;
 } InfraredSensor_t;
 

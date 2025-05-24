@@ -35,8 +35,15 @@
 #define DARK 1
 #define LIGHT 0
 
+// Remote definitions.
+#define REMOTE_PIN 2
+
 // Modes definitions using buttons.
 #define MODE_ALTERATION_PIN 13
+#define OBSTACLE_AVOIDANCE 0
+#define LINE_FOLLOWING_NO_STOP 1
+#define LINE_FOLLOWING_STOP 2
+#define REMOTE_CONTROL 3
 
 LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);
 
@@ -55,6 +62,9 @@ Servo servo;
 void setup() {
   // Serial connection for debugging.
   Serial.begin(9600);
+
+  // Remote Setup
+  remoteInit(REMOTE_PIN);
 
   // LCD setup.
   lcd.begin(16, 2);
@@ -128,6 +138,16 @@ void loop() {
     leftSpeed = 100;
     rotationSpeed = 150;
     oneLineTraceModeModified(&infraredSensorRight, &infraredSensorLeft, &rightMotor, &leftMotor, rightSpeed, leftSpeed, rotationSpeed);
+  }
+  // Remote control mode
+  else if(mode == REMOTE_CONTROL)
+  {
+    lcd.setCursor(0, 0);
+    lcd.print(" REMOTE CONTROL ");
+    rightSpeed = 100;
+    leftSpeed = 100;
+    rotationSpeed = 150;
+    remoteControl(&rightMotor, &leftMotor, rotationSpeed, rightSpeed, leftSpeed);
   }
 }
 

@@ -3,12 +3,9 @@
 
 #ifndef REMOTE_H
 #define REMOTE_H
-#include <LiquidCrystal.h>
 #include <IRremote.hpp>
 #include "motor.h"
-#include "ultrasonic.h"
 #include "car.h"
-#include "infrared-sensor.h"
 #include "stdlib.h"
 
 #define ZERO 0xE619FF00
@@ -26,11 +23,7 @@
 #define DOWN 0xAD52FF00
 #define LEFT_SIDE 0xF708FF00
 #define RIGHT_SIDE 0xA55AFF00
-#define NUMBER_OF_BUTTONS 15
-#define OBSTACLE_AVOIDANCE 0
-#define LINE_FOLLOWING_NO_STOP 1
-#define LINE_FOLLOWING_STOP 2
-#define REMOTE_CONTROL 3
+
 
 unsigned long REMOTE_BUTTONS[]
 {
@@ -51,11 +44,7 @@ unsigned long REMOTE_BUTTONS[]
   RIGHT_SIDE
 };
 
-enum {
-  EXIT = 0,
-  CONTINUE,
-  SELECT,
-  ERROR
-} Status_t;
+void remoteInit(uint8_t receiverPin);
+void remoteControl(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rotationSpeed, uint8_t rightSpeed, uint8_t leftSpeed);
 
 #endif
