@@ -6,7 +6,6 @@
 #include <IRremote.hpp>
 #include "motor.h"
 #include "car.h"
-#include "stdlib.h"
 
 #define ZERO 0xE619FF00
 #define ONE 0xBA45FF00
@@ -45,6 +44,7 @@ unsigned long REMOTE_BUTTONS[]
 };
 
 void remoteInit(uint8_t receiverPin);
-void remoteControl(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rotationSpeed, uint8_t rightSpeed, uint8_t leftSpeed);
+unsigned long remoteControl(Motor_t *rightMotor, Motor_t *leftMotor, uint16_t rotationSpeed, uint16_t rightSpeed, uint16_t leftSpeed);
+unsigned long remoteGetSignal();
 
 #endif

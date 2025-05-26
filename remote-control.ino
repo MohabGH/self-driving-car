@@ -5,7 +5,7 @@ void remoteInit(uint8_t receiverPin)
   IrReceiver.begin(receiverPin, ENABLE_LED_FEEDBACK);
 }
 
-void remoteControl(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rotationSpeed, uint8_t rightSpeed, uint8_t leftSpeed)
+unsigned long remoteControl(Motor_t *rightMotor, Motor_t *leftMotor, uint16_t rotationSpeed, uint16_t rightSpeed, uint16_t leftSpeed)
 {
   unsigned long code = 0;
   unsigned long lastCode = 0;            
@@ -35,8 +35,19 @@ void remoteControl(Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rotationSpee
       else if(lastCode == DOWN) moveStraight(rightMotor, leftMotor, BACKWARD, 0, rightSpeed, leftSpeed);
       else if(lastCode == RIGHT_SIDE) rotateInPlace(rightMotor, leftMotor, RIGHT, 0, rotationSpeed);
       else if(lastCode == LEFT_SIDE) rotateInPlace(rightMotor, leftMotor, LEFT, 0, rotationSpeed);
-      else if (lastCode == OK) break;
-    } 
+      else if(lastCode == ONE || lastCode == TWO || lastCode == THREE) return lastCode;
+    }
     else stopMoving(rightMotor, leftMotor); 
   }
+}
+
+unsigned long remoteGetSignal()
+{
+  unsigned long code = 0;
+  if (IrReceiver.decode()) 
+    {
+      code = IrReceiver.decodedIRData.decodedRawData;
+      IrReceiver.resume();
+    }
+  return code;
 }

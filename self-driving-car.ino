@@ -31,25 +31,23 @@
 
 // Infrared definitions.
 #define INFRARED_RIGHT_PIN 8
-#define INFRARED_LEFT_PIN 7
+#define INFRARED_LEFT_PIN 13
 #define DARK 1
 #define LIGHT 0
 
 // Remote definitions.
-#define REMOTE_PIN 2
+#define REMOTE_PIN 7
 
 // Modes definitions using buttons.
 #define MODE_ALTERATION_PIN 13
-#define OBSTACLE_AVOIDANCE 0
-#define LINE_FOLLOWING_NO_STOP 1
+#define OBSTACLE_AVOIDANCE 1
 #define LINE_FOLLOWING_STOP 2
-#define REMOTE_CONTROL 3
+#define REMOTE_CONTROL 0
 
 LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);
 
-void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t rightSpeed, uint8_t leftSpeed, unsigned int thresholdDistance);
-void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rightSpeed, uint8_t leftSpeed, uint8_t rotationOffset);
-void oneLineTraceModeModified(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rightSpeed, uint8_t leftSpeed, uint8_t rotationSpeed);
+void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint16_t rightSpeed, uint16_t leftSpeed, unsigned int thresholdDistance);
+void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint16_t rightSpeed, uint16_t leftSpeed, uint16_t rotationSpeed);
 
 Motor_t rightMotor;
 Motor_t leftMotor;
@@ -82,9 +80,6 @@ void setup() {
   // Initializing the Ultrasonic for sensing.
   ultrasonicInit(&ultrasonic, ULTRASONIC_TRIGGER_PIN, ULTRASONIC_ECHO_PIN);
 
-  // Setting up modes changer button.
-  pinMode(MODE_ALTERATION_PIN, INPUT_PULLUP);
-
   // Initializing servo.
   servo.attach(SERVO_PIN);
   servo.write(90);
@@ -98,56 +93,60 @@ uint8_t rotationOffset = 0;
 uint8_t rightSpeed = 0;
 uint8_t leftSpeed = 0;
 uint8_t mode = 0;
+unsigned long remoteCode = 0;
 void loop() {
-  // Making the modes variale be scaled to the selected modes.
-  if(digitalRead(MODE_ALTERATION_PIN) == LOW)
+  switch(remoteCode)
   {
-    mode = ++mode % 3;
-    delay(200);
+    case 0:
+      remoteCode = remoteGetSignal();
+      break;
+    case ONE:
+      mode = REMOTE_CONTROL;
+      remoteCode = 0;
+      break;
+    case TWO:
+      mode = OBSTACLE_AVOIDANCE;
+      remoteCode = 0;
+      break;
+    case THREE:
+      mode = LINE_FOLLOWING_STOP;
+      remoteCode = 0;
+      break;
+    default: 
+      remoteCode = 0;
+      break;
   }
-
   // The abstacle avoidance mode.
   if(mode == OBSTACLE_AVOIDANCE)
   {
     lcd.setCursor(0, 0);
     lcd.print(" OBSTACLE AVOID ");
-    rightSpeed = 100;
-    leftSpeed = 100;
+    rightSpeed = 150;
+    leftSpeed = 150;
     thresholdDistance = 20;
     rotationSpeed = 150;
     obstacleAvoidance(&rightMotor, &leftMotor, &ultrasonic, rightSpeed, leftSpeed, thresholdDistance, rotationSpeed);
-  }
-  // The line follwing mode. Doesn't stop to modify the orientation. It modifies the orientation while moving.
-  else if(mode == LINE_FOLLOWING_NO_STOP)
-  {
-    Serial.println("Trace Stop");
-    lcd.setCursor(0, 0);
-    lcd.print("  LINE TRACE 1  ");
-    rightSpeed = 100;
-    leftSpeed = 100;
-    rotationOffset = 50;
-    oneLineTraceMode(&infraredSensorRight, &infraredSensorLeft, &rightMotor, &leftMotor, rightSpeed, leftSpeed, rotationOffset);
   }
   // The line following mode. Stops to modify the orientation then moves again.
   else if(mode == LINE_FOLLOWING_STOP)
   {
     Serial.println("Trace No");
     lcd.setCursor(0, 0);
-    lcd.print("  LINE TRACE 2  ");
-    rightSpeed = 100;
-    leftSpeed = 100;
+    lcd.print("   LINE TRACE   ");
+    rightSpeed = 150;
+    leftSpeed = 150;
     rotationSpeed = 150;
-    oneLineTraceModeModified(&infraredSensorRight, &infraredSensorLeft, &rightMotor, &leftMotor, rightSpeed, leftSpeed, rotationSpeed);
+    oneLineTraceMode(&infraredSensorRight, &infraredSensorLeft, &rightMotor, &leftMotor, rightSpeed, leftSpeed, rotationSpeed);
   }
   // Remote control mode
   else if(mode == REMOTE_CONTROL)
   {
     lcd.setCursor(0, 0);
     lcd.print(" REMOTE CONTROL ");
-    rightSpeed = 100;
-    leftSpeed = 100;
+    rightSpeed = 150;
+    leftSpeed = 150;
     rotationSpeed = 150;
-    remoteControl(&rightMotor, &leftMotor, rotationSpeed, rightSpeed, leftSpeed);
+    remoteCode = remoteControl(&rightMotor, &leftMotor, rotationSpeed, rightSpeed, leftSpeed);
   }
 }
 
@@ -159,7 +158,7 @@ void loop() {
   leftSpeed -> The speed of the motor on the left
   thresholdDistance -> The distance on which it will stop and look left and right.
   rotationSpeed -> The speed the car is going to rotate in towards the direction that has more distance*/
-void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint8_t rightSpeed, uint8_t leftSpeed, unsigned int thresholdDistance, unsigned int rotationSpeed)
+void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ultrasonic, uint16_t rightSpeed, uint16_t leftSpeed, unsigned int thresholdDistance, uint16_t rotationSpeed)
 {
   moveStraight(rightMotor, leftMotor, FORWARD, 0, rightSpeed, leftSpeed);
   float distance = ultrasonicGetDistance(ultrasonic);
@@ -200,51 +199,6 @@ void obstacleAvoidance(Motor_t *rightMotor, Motor_t *leftMotor, Ultrasonic_t *ul
   }
 }
 
-/*This mode traces a line and continues moving while changing the orientation.
-  infraredSensorRight -> The sensor on the right of the car.
-  infraredSensorLeft -> The sensor on the left of the car.
-  rightMotor -> The motor on the right of the car.
-  leftMotor -> The motor on the left of the car.
-  rightSpeed -> The speed of the right wheel.
-  leftSpeed -> The speed of the left wheel.*/
-void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rightSpeed, uint8_t leftSpeed, uint8_t rotationOffset)
-{
-  // As long as the right and left sensors are reading LIGHT (LOW), it is going to move straight forward.
-  if(getInfraredState(infraredSensorRight) == LIGHT && getInfraredState(infraredSensorLeft) == LIGHT)
-  {
-    moveStraight(rightMotor, leftMotor, FORWARD, 0, rightSpeed, leftSpeed);
-  }
-  /*If the sensor on the right found the ground to be DARK (HIGH), it is going to enter the loop.*/
-  while(getInfraredState(infraredSensorRight) == DARK)
-  {
-    /*If the left sensor is reading DARK like the right sensor, the car is going to stop moving and break.*/
-    if(getInfraredState(infraredSensorLeft) == DARK)
-    {
-      stopMoving(rightMotor, leftMotor);
-      break;
-    }
-    /*As long as the right sensor is DARK, the car is going to rotate until the right sensor becomes LIGHT again or left sensor becomes DARK.*/
-    changeMotorSpeed(leftMotor, leftSpeed + rotationOffset);
-  }
-  // Changing the motor speed to the normal speed again.
-  changeMotorSpeed(leftMotor, leftSpeed);
-
-  /*If the sensor on the left found the ground to be DARK (HIGH), it is going to enter the loop.*/
-  while(getInfraredState(infraredSensorLeft) == DARK)
-  {
-    /*If the right sensor is reading DARK like the right sensor, the car is going to stop moving and break.*/
-    if(getInfraredState(infraredSensorRight) == DARK)
-    {
-      stopMoving(rightMotor, leftMotor);
-      break;
-    }
-    /*As long as the left sensor is DARK, the car is going to rotate until the left sensor becomes LIGHT again or right sesnor becomes DARK.*/
-    changeMotorSpeed(rightMotor, rightSpeed + rotationOffset);
-  }
-  // Changing the motor speed to the normal speed again.
-  changeMotorSpeed(rightMotor, rightSpeed);
-}
-
 /*This mode traces a line and stops while changing the orientation.
   infraredSensorRight -> The sensor on the right of the car.
   infraredSensorLeft -> The sensor on the left of the car.
@@ -252,7 +206,7 @@ void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *i
   leftMotor -> The motor on the left of the car.
   rightSpeed -> The speed of the right wheel.
   leftSpeed -> The speed of the left wheel.*/
-void oneLineTraceModeModified(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint8_t rightSpeed, uint8_t leftSpeed, uint8_t rotationSpeed)
+void oneLineTraceMode(InfraredSensor_t *infraredSensorRight, InfraredSensor_t *infraredSensorLeft, Motor_t *rightMotor, Motor_t *leftMotor, uint16_t rightSpeed, uint16_t leftSpeed, uint16_t rotationSpeed)
 {
   // As long as the right and left sensors are reading LIGHT (LOW), it is going to move straight forward.
   if(getInfraredState(infraredSensorRight) == LIGHT && getInfraredState(infraredSensorLeft) == LIGHT)

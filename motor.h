@@ -22,9 +22,9 @@ typedef struct{
   uint8_t speedPin;
 } Motor_t;
 
-void moveMotor(Motor_t *motor, uint8_t movingMode, uint8_t speed);
+void moveMotor(Motor_t *motor, uint8_t movingMode, uint16_t speed);
 void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin, uint8_t speedPin);
 void stopMotor(Motor_t *motor);
-void changeMotorSpeed(Motor_t *motor, uint8_t speed);
+void changeMotorSpeed(Motor_t *motor, uint16_t speed);
 
 #endif

@@ -20,7 +20,7 @@ void motorInit(Motor_t *motor, uint8_t positivePin, uint8_t negativePin, uint8_t
   movingMode -> It is the direction the motor will move in. It can either be FORWARD or BACKWARD.
   speed -> The speed the motor will use if it contains a pin. This would be useless if there's no pin for controlling speed.
 speed is a value between 0 and 255*/
-void moveMotor(Motor_t *motor, uint8_t movingMode, uint8_t speed)
+void moveMotor(Motor_t *motor, uint8_t movingMode, uint16_t speed)
 {
   // Checking that the movingMode is either FORWARD or BACKWARD.
   if(movingMode != FORWARD && movingMode != BACKWARD) return;
@@ -50,7 +50,7 @@ void stopMotor(Motor_t *motor)
 /*Changes the speed of a specific motor without moving or stopping the motor.
   motor -> A pointer to the motor that needs to be modified.
   speed -> The new speed of the motor.*/
-void changeMotorSpeed(Motor_t *motor, uint8_t speed)
+void changeMotorSpeed(Motor_t *motor, uint16_t speed)
 {
   /*If there's a pin for the speed, and the speed is in the valid range, The motor speed will change.
     If not, this function does nothing.*/
