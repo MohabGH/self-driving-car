@@ -92,7 +92,7 @@ uint16_t rotationSpeed = 0;
 uint16_t rotationOffset = 0;
 uint16_t rightSpeed = 0;
 uint16_t leftSpeed = 0;
-uint16_t mode = 0;
+uint8_t mode = 0;
 unsigned long remoteCode = 0;
 void loop() {
   switch(remoteCode)
